@@ -1,8 +1,0 @@
-[phases.setup]
-nixpkgs_archive = "https://github.com/NixOS/nixpkgs/archive/nixos-24.05.tar.gz"
-
-[phases.build]
-cmds = ["npm run build"]
-
-[variables]
-NODE_VERSION = "22"
