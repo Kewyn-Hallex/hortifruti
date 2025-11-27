@@ -1,5 +1,21 @@
-[build]
-nodeVersion = "22"
+[phases.setup]
+nixpkgsVersion = "23.11"
+
+[phases.install]
+nixPkgs = [
+  "php83",
+  "composer",
+  "nodejs_20",
+  "npm",
+  "mysql",
+  "php83Extensions.pdo_mysql"
+]
 
 [phases.build]
-cmds = ["npm install", "npm run build"]
+cmds = [
+  "composer install --no-dev --optimize-autoloader",
+  "npm install && npm run build"
+]
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
