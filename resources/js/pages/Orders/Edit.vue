@@ -258,7 +258,7 @@ const handleFinalize = async () => {
     });
 }
 
-// called when a product is selected for an item
+// called when a product is selected for an item to update the price
 const onProductChange = async (item: Item) => {
     if (!item.productId) {
         item.price = 0;
