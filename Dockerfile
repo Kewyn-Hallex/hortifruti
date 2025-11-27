@@ -15,11 +15,23 @@ COPY public ./public
 RUN npm run build
 
 # Stage 2: PHP e Composer dependencies
-FROM composer:latest AS composer-deps
+FROM php:8.2-cli AS composer-deps
+
+# Instalar dependências básicas e Composer
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    unzip \
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY composer.json composer.lock ./
+# Copiar arquivos do Composer
+COPY composer.json ./
+COPY composer.lock ./
+
+# Instalar dependências do Composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-reqs
 
 # Stage 3: Imagem final de produção
@@ -38,8 +50,8 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Instalar Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Instalar Composer na imagem final
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Habilitar mod_rewrite do Apache
 RUN a2enmod rewrite
