@@ -47,6 +47,8 @@ Thumbs.db
 # Documentation
 README.md
 *.md
+SEVALLA_DEPLOY.md
+sevalla.env.example
 
 # Docker
 Dockerfile

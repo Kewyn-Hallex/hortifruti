@@ -14,12 +14,19 @@ Este documento contém instruções para fazer deploy da aplicação Laravel no 
 
 1. Acesse o painel do Sevalla
 2. Clique em "Applications" > "New Application"
-3. Escolha "Docker Image" como tipo de fonte
+3. **IMPORTANTE - Configurar Build Method**:
+   - Se o Sevalla detectar automaticamente o Nixpacks e der erro:
+     - Vá em "Settings" > "Build Configuration" da aplicação
+     - Selecione "Dockerfile" como método de build
+     - Ou escolha "Docker Image" como tipo de fonte
+   - O projeto já possui um `Dockerfile` otimizado que será usado automaticamente
 4. Configure:
    - Nome da aplicação
    - Região
    - Tamanho do pod
 5. Clique em "Create"
+
+**Nota**: Se você encontrar erros relacionados ao Nixpacks (como `nodejs_24` não encontrado), certifique-se de que o método de build está configurado para usar o Dockerfile no painel do Sevalla.
 
 ### 2. Configurar Variáveis de Ambiente
 
@@ -102,6 +109,15 @@ O Dockerfile usa multi-stage build para otimizar o tamanho da imagem:
 - Permissões corretas para storage e cache
 
 ## Troubleshooting
+
+### Erro do Nixpacks (nodejs_24 não encontrado)
+Se você encontrar erros como `error: undefined variable 'nodejs_24'`:
+1. Vá em "Settings" > "Build Configuration" da aplicação no Sevalla
+2. Altere o método de build para "Dockerfile"
+3. Salve as configurações
+4. Faça um novo deploy
+
+O projeto está configurado para usar Dockerfile, que é mais confiável e otimizado.
 
 ### Erro de permissões
 Se houver erros de permissão, verifique se as pastas `storage` e `bootstrap/cache` têm permissão 775.
