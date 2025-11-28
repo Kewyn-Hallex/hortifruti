@@ -28,7 +28,6 @@ const items = ref(props.items || []);
 const handlePrint = () => window.print();
 
 const handleExportPDF = async () => {
-  // Get the invoice element
   const invoiceElement = document.querySelector('.invoice-content') as HTMLElement;
   if (!invoiceElement) {
     alert('Erro ao exportar PDF');
@@ -36,28 +35,26 @@ const handleExportPDF = async () => {
   }
 
   try {
-    // Import html2pdf dynamically
-    // @ts-ignore - html2pdf.js doesn't have type definitions
+    // @ts-ignore
     const html2pdf = await import('html2pdf.js');
     const opt = {
       margin: [10, 10, 10, 10] as [number, number, number, number],
       filename: `pedido-${String(order.value.id).padStart(5, '0')}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+      jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
     };
 
     (html2pdf as any).default().set(opt).from(invoiceElement).save();
   } catch (error) {
     console.error('Erro ao carregar html2pdf:', error);
-    // Fallback: try to use window.html2pdf if available
     if ((window as any).html2pdf) {
       const opt = {
         margin: [10, 10, 10, 10] as [number, number, number, number],
         filename: `pedido-${String(order.value.id).padStart(5, '0')}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
       };
       (window as any).html2pdf().set(opt).from(invoiceElement).save();
     } else {
@@ -72,431 +69,593 @@ const handleBack = () => {
 </script>
 
 <template>
-  <Head :title="`Pedido #${order.id} - Nota`" />
+  <Head :title="`Pedido #${order.id} - Nota Fiscal`" />
 
   <AppLayout>
-    <div
-      class="invoice-content p-10 max-w-4xl mx-auto mt-10 bg-[var(--bg)] text-[var(--text)] border border-[var(--border)] shadow-lg rounded-xl print:shadow-none print:border-none print:mt-0 print:p-6"
-    >
-      <!-- Topo / Identificação -->
-      <header class="flex items-start justify-between pb-6 border-b border-[var(--border)] gap-6">
-        <!-- Dados da empresa -->
-        <div class="space-y-1">
-          <h1 class="text-2xl font-extrabold tracking-wide text-[var(--title)] uppercase">
-            Comercial Pampulha Ltda
-          </h1>
-          <p class="text-xs leading-tight text-[var(--muted)]">
-            CNPJ: 00.000.000/0001-00
-          </p>
-          <p class="text-xs leading-tight text-[var(--muted)]">
-            Endereço: Rua Exemplo, 123 - Bairro, Cidade/UF - CEP 00000-000
-          </p>
-          <p class="text-xs leading-tight text-[var(--muted)]">
-            Telefone: (91) 99999-0000 &nbsp;|&nbsp; E-mail: contato@comercialpampulha.com.br
-          </p>
-        </div>
-
-        <!-- Dados do pedido -->
-        <div class="text-right space-y-1">
-          <p class="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-            Pedido de Venda
-          </p>
-          <p class="text-2xl font-semibold text-[var(--title)]">
-            Nº {{ String(order.id).padStart(5, '0') }}
-          </p>
-          <div class="mt-2 space-y-0.5 text-xs">
-            <p>
-              <span class="font-semibold">Data:</span>
-              <span class="ml-1">{{ order.date }}</span>
-            </p>
-            <p>
-              <span class="font-semibold">Forma de pagamento:</span>
-              <span class="ml-1">{{ order.payment || 'Não informado' }}</span>
-            </p>
+    <!-- Wrapper geral para centralizar -->
+    <div class="flex justify-center py-6 print:py-0">
+      <!-- Conteúdo a ser exportado/imprimido -->
+      <div class="invoice-a4 invoice-content">
+        <!-- Cabeçalho -->
+        <header class="invoice-header">
+          <!-- Bloco empresa (logo grande) -->
+          <div class="company-block full-logo">
+            <div class="company-logo-row center-logo">
+              <div class="logo-wrapper large">
+                <img
+                  src="../../../images/image.png"
+                  alt="Logomarca Comercial Pampulha"
+                  class="company-logo"
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </header>
 
-      <!-- Dados do cliente -->
-      <section class="py-4 border-b border-[var(--border)] mt-2">
-        <div class="flex justify-between items-start gap-6">
-          <div class="flex-1 space-y-2 text-sm">
-            <p class="font-semibold text-[var(--label)] uppercase tracking-wide text-xs">
-              Dados do Cliente
+          <!-- Bloco pedido -->
+          <div class="order-block">
+            <p class="order-title">NOTA FISCAL</p>
+            <p class="order-number">
+              {{ String(order.id).padStart(5, '0') }}
             </p>
-            <div class="space-y-1">
-              <p class="font-medium text-base">
-                {{ order.client_name }}
+            <div class="order-meta-group">
+              <p class="order-meta">
+                <span class="label">Data:</span>
+                <span>{{ order.date }}</span>
               </p>
-              <template v-if="client">
-                <p v-if="client.phone" class="text-[var(--text)] text-sm">
-                  <span class="font-semibold">Telefone:</span> {{ client.phone }}
-                </p>
-                <p v-if="client.address" class="text-[var(--text)] text-sm">
-                  <span class="font-semibold">Endereço:</span> {{ client.address }}
-                </p>
-              </template>
+              <p class="order-meta">
+                <span class="label">Pagamento:</span>
+                <span>{{ order.payment || 'Não informado' }}</span>
+              </p>
             </div>
           </div>
+        </header>
 
-          <div class="w-52 text-xs text-right text-[var(--muted)]">
-            <p class="italic">
-              Documento gerado eletronicamente.<br />
-              Não necessita de assinatura.
+        <!-- Cliente -->
+        <section class="client-section">
+          <div class="client-left">
+            <p class="label-small">CLIENTE</p>
+            <p class="client-name">{{ order.client_name }}</p>
+
+            <p v-if="client?.phone" class="client-detail">
+              <span class="detail-label">Telefone:</span> {{ client.phone }}
+            </p>
+
+            <p v-if="client?.address" class="client-detail">
+              <span class="detail-label">Endereço:</span> {{ client.address }}
             </p>
           </div>
-        </div>
-      </section>
 
-      <!-- Itens do pedido -->
-      <section class="py-5">
-        <table class="w-full border border-[var(--border)] text-xs rounded-md overflow-hidden">
-          <thead class="bg-[var(--table-head-bg)] text-[var(--table-head-text)]">
-            <tr>
-              <th class="border border-[var(--border)] px-2 py-2 text-center font-semibold">
-                Código
-              </th>
-              <th class="border border-[var(--border)] px-3 py-2 text-left font-semibold">
-                Descrição
-              </th>
-              <th class="border border-[var(--border)] px-2 py-2 text-center font-semibold">
-                Unidade
-              </th>
-              <th class="border border-[var(--border)] px-2 py-2 text-center font-semibold">
-                Quantidade
-              </th>
-              <th class="border border-[var(--border)] px-2 py-2 text-right font-semibold">
-                Vlr. Unitário (R$)
-              </th>
-              <th class="border border-[var(--border)] px-2 py-2 text-right font-semibold">
-                Vlr. Total (R$)
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(it, index) in items"
-              :key="it.id ?? index"
-              class="odd:bg-[var(--row-odd-bg)] even:bg-[var(--row-even-bg)]"
-            >
-              <td class="border border-[var(--border)] text-center px-2 py-2 align-middle">
-                {{ it.code || '—' }}
-              </td>
-              <td class="border border-[var(--border)] px-3 py-2 align-middle">
-                <div class="font-medium text-[var(--text)]">
+          <div class="client-right">
+            <p class="client-note">
+              Documento gerado eletronicamente.
+              <br />
+              Não necessita assinatura.
+            </p>
+          </div>
+        </section>
+
+        <!-- Itens -->
+        <section class="items-section">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th class="col-code">CÓDIGO</th>
+                <th class="col-desc">DESCRIÇÃO</th>
+                <th class="col-unit">UN</th>
+                <th class="col-qty">QTD</th>
+                <th class="col-unit-price">VLR UNIT.</th>
+                <th class="col-total">TOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(it, index) in items" :key="index">
+                <td class="center">
+                  {{ it.code || '—' }}
+                </td>
+                <td>
                   {{ it.product_name }}
-                </div>
-                <!-- Se quiser, pode exibir observações do item aqui -->
-              </td>
-              <td class="border border-[var(--border)] text-center px-2 py-2 align-middle">
-                {{ it.unit === 'box' ? 'CX' : 'KG' }}
-              </td>
-              <td class="border border-[var(--border)] text-center px-2 py-2 align-middle">
-                {{ it.qty }}
-              </td>
-              <td class="border border-[var(--border)] text-right px-2 py-2 align-middle">
-                {{ `R$ ${it.price.toFixed(2)}` }}
-              </td>
-              <td class="border border-[var(--border)] text-right px-2 py-2 align-middle font-semibold">
-                {{ `R$ ${it.total.toFixed(2)}` }}
-              </td>
-            </tr>
+                </td>
+                <td class="center">
+                  {{ it.unit === 'box' ? 'CX' : 'KG' }}
+                </td>
+                <td class="center">
+                  {{ it.qty }}
+                </td>
+                <td class="right">
+                  R$ {{ it.price.toFixed(2) }}
+                </td>
+                <td class="right item-total">
+                  R$ {{ it.total.toFixed(2) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
 
-            <tr v-if="!items.length">
-              <td colspan="6" class="text-center text-[var(--muted)] py-6">
-                Nenhum item adicionado a este pedido.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+        <!-- Resumo -->
+        <section class="summary-section">
+          <div class="summary-box">
+            <div class="summary-header">
+              RESUMO
+            </div>
 
-      <!-- Resumo financeiro -->
-      <section class="mt-2 flex justify-end">
-        <div class="w-72 text-sm border border-[var(--border)] rounded-md overflow-hidden">
-          <div class="flex justify-between px-3 py-2 bg-[var(--summary-bg)] border-b border-[var(--border)]">
-            <span class="font-semibold text-[var(--label)] uppercase text-xs tracking-wide">
-              Resumo do Pedido
-            </span>
-          </div>
+            <div class="summary-body">
+              <div class="summary-row">
+                <span>Subtotal:</span>
+                <span class="summary-value">
+                  R$ {{ order.total.toFixed(2) }}
+                </span>
+              </div>
+            </div>
 
-          <div class="px-3 py-2 space-y-1">
-            <!-- Caso tenha desconto/frete, adicionar aqui -->
-            <div class="flex justify-between">
-              <span class="text-[var(--muted)]">Subtotal</span>
-              <span class="font-medium">
-                {{ `R$ ${order.total.toFixed(2)}` }}
+            <div class="summary-total">
+              <span class="summary-total-label">TOTAL</span>
+              <span class="total-amount">
+                R$ {{ order.total.toFixed(2) }}
               </span>
             </div>
           </div>
+        </section>
 
-          <div class="px-3 py-2 bg-[var(--summary-total-bg)] border-t border-[var(--border)]">
-            <div class="flex justify-between items-center">
-              <span class="font-bold text-[var(--label)] uppercase text-xs tracking-wide">
-                Total do Pedido
-              </span>
-              <span class="font-extrabold text-lg text-[var(--title)]">
-                {{ `R$ ${order.total.toFixed(2)}` }}
-              </span>
-            </div>
+        <!-- Observações -->
+        <section class="notes-section">
+          <p class="notes-title">Observações</p>
+          <p class="notes-text">
+            Preços e condições são válidos apenas para este pedido.
+          </p>
+        </section>
+
+        <!-- Assinaturas -->
+        <section class="signatures">
+          <div class="signature-block">
+            <div class="sig-line"></div>
+            <p class="sig-label">ASSINATURA DO CLIENTE</p>
           </div>
-        </div>
-      </section>
-
-      <!-- Observações e assinatura -->
-      <section class="mt-8 text-xs text-[var(--muted)]">
-        <p class="mb-4">
-          <span class="font-semibold">Observações:</span><br />
-          Os preços e condições de pagamento aqui descritos são válidos somente para este pedido.
-        </p>
-
-        <div class="flex justify-between mt-10 print:mt-6 gap-10">
-          <div class="flex-1 text-center">
-            <div class="border-t border-[var(--border)] pt-1"></div>
-            <p class="mt-1 text-[var(--muted)] text-[0.65rem] uppercase tracking-wide">
-              Assinatura do Cliente
-            </p>
+          <div class="signature-block">
+            <div class="sig-line"></div>
+            <p class="sig-label">ASSINATURA DO REPRESENTANTE</p>
           </div>
-          <div class="flex-1 text-center">
-            <div class="border-t border-[var(--border)] pt-1"></div>
-            <p class="mt-1 text-[var(--muted)] text-[0.65rem] uppercase tracking-wide">
-              Assinatura do Representante
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Botões (não imprime) -->
-      <div class="flex gap-3 mt-8 print:hidden justify-end">
-        <button
-          @click="handleBack"
-          class="px-4 py-2 border border-[var(--border)] rounded-md text-[var(--text)] text-sm hover:bg-[var(--border)] hover:bg-opacity-15 transition-colors"
-        >
-          ← Voltar ao Dashboard
-        </button>
-
-        <button
-          @click="handlePrint"
-          class="px-6 py-2 rounded-md text-sm font-semibold text-black bg-[#D9A84E] hover:brightness-105 active:brightness-95 transition-all shadow-sm"
-        >
-          Imprimir
-        </button>
-
-        <button
-          @click="handleExportPDF"
-          class="px-6 py-2 rounded-md text-sm font-semibold text-white bg-gray-700 hover:bg-gray-600 active:bg-gray-800 transition-all shadow-sm"
-        >
-          Exportar PDF
-        </button>
+        </section>
       </div>
+    </div>
+
+    <!-- Botões (fora da área impressa) -->
+    <div class="actions print:hidden mt-4 flex justify-end gap-3 px-4 lg:px-0">
+      <button @click="handleBack" class="btn btn-secondary">
+        <span class="btn-icon">⬅</span>
+        <span>Voltar</span>
+      </button>
+
+      <button @click="handlePrint" class="btn btn-outline">
+        <span class="btn-icon">🖨</span>
+        <span>Imprimir</span>
+      </button>
+
+      <button @click="handleExportPDF" class="btn btn-primary">
+        <span class="btn-icon">📄</span>
+        <span>Exportar PDF</span>
+      </button>
     </div>
   </AppLayout>
 </template>
 
 <style scoped>
-/* Tipografia empresarial ( Arial Narrow se houver, senão Arial ) */
-.invoice-content {
-  font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
-  color: #111;
-  background: #fff;
-  padding: 18px;
-  max-width: 210mm; /* largura A4 */
-  box-shadow: none;
-  border: none;
-}
-
-/* Remove arredondamento e sombras para ficar fiel ao papel */
+/* Layout geral */
 .invoice-a4 {
-  background: #fff;
-  border: 1px solid #000;
-  padding: 18px;
-  margin-bottom: 20px;
+  background: #ffffff;
+  padding: 20px 18px;
+  width: 210mm;
+  margin: 0 auto;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  color: #111827;
+  font-size: 11px;
+  line-height: 1.35;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
 }
 
-/* Header estilo bloco */
+/* Cabeçalho */
 .invoice-header {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #000;
+  gap: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid #111827;
 }
 
 .company-block {
-  max-width: 60%;
+  flex: 1.4;
 }
 
-.company-name {
-  font-size: 20px;
-  font-weight: 700;
-  color: #000;
-  letter-spacing: 0.6px;
-  margin: 0 0 6px 0;
+/* Logo grande */
+.full-logo {
+  display: flex;
+  align-items: center;
 }
 
-.company-meta {
-  font-size: 11px;
-  color: #000;
-  line-height: 1.1;
+.center-logo {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
 }
 
-/* Order block */
+.logo-wrapper.large {
+  width: 250px;
+  height: 110px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.company-logo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Bloco Pedido */
 .order-block {
+  flex: 0 0 180px;
+  border: 1px solid #111827;
+  border-radius: 6px;
+  padding: 10px 12px;
   text-align: right;
-  min-width: 170px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .order-title {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #111827;
 }
 
 .order-number {
   font-size: 20px;
   font-weight: 700;
-  margin-top: 6px;
-  color: #000;
+  margin: 4px 0 6px;
+  letter-spacing: 0.08em;
+}
+
+.order-meta-group {
+  margin-top: 2px;
 }
 
 .order-meta {
-  font-size: 11px;
-  color: #000;
-  margin-top: 6px;
+  font-size: 10px;
+  color: #374151;
+  line-height: 1.3;
 }
 
-/* Client */
+.order-meta .label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+/* Cliente */
 .client-section {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
-  padding: 10px 0;
-  border-bottom: 1px solid #000;
+  padding: 10px 0 10px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-top: 8px;
+  gap: 24px;
 }
 
-.client-left { flex: 1; }
-.client-right { width: 200px; text-align: right; }
+.client-left {
+  flex: 2;
+}
 
-/* Labels */
-.label.small { font-size: 10px; font-weight: 700; color: #000; }
+.label-small {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
 
-/* Items table */
-.items-section { margin-top: 12px; }
+.client-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.client-detail {
+  font-size: 10px;
+  color: #4b5563;
+}
+
+.detail-label {
+  font-weight: 600;
+}
+
+.client-right {
+  flex: 1;
+  text-align: right;
+  align-self: flex-start;
+}
+
+.client-note {
+  font-size: 9px;
+  color: #6b7280;
+}
+
+/* Itens */
+.items-section {
+  margin-top: 12px;
+}
 
 .items-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  border: 1px solid #d1d5db;
 }
 
-.items-table thead th {
-  border: 1px solid #000;
-  padding: 6px 8px;
+.items-table thead {
+  background: #f3f4f6;
+}
+
+.items-table th,
+.items-table td {
+  padding: 6px 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.items-table th {
+  font-size: 10px;
   font-weight: 700;
-  font-size: 11px;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #4b5563;
 }
 
 .items-table td {
-  border: 1px solid #000;
-  padding: 6px 8px;
-  vertical-align: middle;
-  font-size: 12px;
+  font-size: 10.5px;
+  color: #111827;
 }
 
-.items-table .col-code { width: 9%; text-align: center; }
-.items-table .col-desc { width: 44%; text-align: left; }
-.items-table .col-unit { width: 10%; text-align: center; }
-.items-table .col-qty { width: 10%; text-align: center; }
-.items-table .col-unit-price { width: 13%; text-align: right; }
-.items-table .col-total { width: 14%; text-align: right; }
+.col-code {
+  width: 11%;
+}
 
-.cell.center { text-align: center; }
-.cell.right { text-align: right; }
-.font-semibold { font-weight: 700; }
+.col-desc {
+  width: 45%;
+}
 
-/* small & muted */
-.small { font-size: 11px; }
-.muted { color: #333; }
+.col-unit {
+  width: 6%;
+}
 
-/* Summary */
-.summary-section { display: flex; justify-content: flex-end; margin-top: 12px; }
+.col-qty {
+  width: 8%;
+}
+
+.col-unit-price {
+  width: 15%;
+}
+
+.col-total {
+  width: 15%;
+}
+
+.center {
+  text-align: center;
+}
+
+.right {
+  text-align: right;
+}
+
+.item-total {
+  font-weight: 600;
+}
+
+/* Resumo */
+.summary-section {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .summary-box {
-  width: 260px;
-  border: 1px solid #000;
-  font-size: 12px;
-  background: transparent;
+  width: 240px;
+  border: 1px solid #111827;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .summary-header {
-  padding: 8px 10px;
-  border-bottom: 1px solid #000;
   font-weight: 700;
+  padding: 6px 8px;
+  border-bottom: 1px solid #111827;
+  font-size: 10px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  font-size: 11px;
+  background: #f9fafb;
 }
 
-.summary-body { padding: 8px 10px; }
-.summary-row { display: flex; justify-content: space-between; padding: 4px 0; }
+.summary-body {
+  padding: 4px 8px 2px 8px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  font-size: 10px;
+  color: #374151;
+}
+
+.summary-value {
+  font-weight: 600;
+}
 
 .summary-total {
-  padding: 8px 10px;
-  border-top: 1px solid #000;
+  border-top: 1px solid #111827;
+  padding: 6px 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.total-amount { font-weight: 800; }
-
-/* Notes and signatures */
-.notes-section { margin-top: 16px; font-size: 12px; color: #000; }
-.signatures {
-  display: flex;
-  gap: 30px;
-  margin-top: 18px;
+.summary-total-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
-.signature-block { flex: 1; text-align: center; }
-.sig-line { border-top: 1px solid #000; height: 1px; width: 80%; margin: 0 auto 6px; }
-.sig-label { font-size: 10px; color: #333; text-transform: uppercase; letter-spacing: 0.6px; }
 
-/* Actions */
-.actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
+.total-amount {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* Observações */
+.notes-section {
   margin-top: 14px;
+  font-size: 10px;
+  color: #374151;
 }
-.btn {
-  padding: 8px 12px;
-  border: 1px solid #000;
-  background: #fff;
-  font-size: 13px;
-  cursor: pointer;
-}
-.btn.primary {
-  background: #000;
-  color: #fff;
-  border-color: #000;
-}
-.btn.secondary {
-  background: #444;
-  color: #fff;
-  border-color: #444;
-}
-.btn.ghost { background: transparent; }
 
-/* Print rules - garantir A4 e cores reais */
+.notes-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 9.5px;
+}
+
+.notes-text {
+  margin-top: 1px;
+}
+
+/* Assinaturas */
+.signatures {
+  margin-top: 26px;
+  display: flex;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.signature-block {
+  flex: 1;
+  text-align: center;
+}
+
+.sig-line {
+  width: 180px;
+  border-top: 1px solid #111827;
+  margin: 0 auto 4px;
+}
+
+.sig-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4b5563;
+}
+
+/* Botões (fora da nota) */
+.actions {
+  margin-bottom: 12px;
+}
+
+/* Base dos botões */
+.btn {
+  padding: 7px 13px;
+  cursor: pointer;
+  font-size: 13px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-width: 1px;
+  border-style: solid;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.08s ease;
+}
+
+/* Ícone dentro do botão */
+.btn-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* Estados */
+.btn:active {
+  transform: translateY(1px);
+}
+
+/* Botão primário (PDF) */
+.btn-primary {
+  background: #111827;
+  color: #f9fafb;
+  border-color: #111827;
+}
+
+.btn-primary:hover {
+  background: #000000;
+  border-color: #000000;
+  box-shadow: 0 0 0 1px #000000;
+}
+
+/* Botão secundário (Voltar) */
+.btn-secondary {
+  background: #f9fafb;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  box-shadow: 0 0 0 1px #d1d5db;
+}
+
+/* Botão contornado (Imprimir) */
+.btn-outline {
+  background: #ffffff;
+  color: #111827;
+  border-color: #9ca3af;
+}
+
+.btn-outline:hover {
+  background: #111827;
+  color: #ffffff;
+  border-color: #111827;
+  box-shadow: 0 0 0 1px #111827;
+}
+
+/* Impressão */
 @media print {
-  .print\:hidden { display: none !important; }
-  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .invoice-content, .invoice-a4 {
-    box-shadow: none !important;
-    border: none !important;
+  .print\:hidden {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  .invoice-a4 {
+    box-shadow: none;
     margin: 0;
-    padding: 0;
     width: auto;
   }
-  @page { size: A4; margin: 18mm; }
 }
 </style>
